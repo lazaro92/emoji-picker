@@ -26,6 +26,12 @@ int main() {
     // Create an Xft draw context
     draw = XftDrawCreate(display, window, DefaultVisual(display, 0), DefaultColormap(display, 0));
 
+   // Example color
+   XftColor color;
+    Colormap colormap = DefaultColormap(display, DefaultScreen(display));
+    XftColorAllocName(display, DefaultVisual(display, DefaultScreen(display)),
+                      colormap, "red", &color);
+
     // Main event loop
     XEvent event;
     while (1) {
@@ -34,7 +40,7 @@ int main() {
             // Draw the emoji
             const char *emoji_text = "😀";  // Unicode representation of the emoji
             XftTextExtentsUtf8(display, font, (XftChar8 *)emoji_text, strlen(emoji_text), &glyph_info);
-            XftDrawStringUtf8(draw, &font->color, font, 50, 150, (XftChar8 *)emoji_text, strlen(emoji_text));
+            XftDrawStringUtf8(draw, &color, font, 50, 150, (XftChar8 *)emoji_text, strlen(emoji_text));
         }
         if (event.type == KeyPress) {
             break; // Exit on key press

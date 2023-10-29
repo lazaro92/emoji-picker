@@ -1,41 +1,51 @@
 #include <X11/Xlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <X11/Xft/Xft.h>
 
-int main(void) {
-   Display *d;
-   Window w;
-   XEvent e;
-   const char *msg = "❤️";
-   int s;
+int main() {
+    Display *display;
+    Window window;
+    XftFont *font;
+    XGlyphInfo glyph_info;
+    XftDraw *draw;
 
-    printf("rwefere\n");
-    printf("❤️\n");
+    // Open a connection to the X server
+    display = XOpenDisplay(NULL);
+    if (display == NULL) {
+        fprintf(stderr, "Cannot open display\n");
+        return 1;
+    }
 
+    // Create a window
+    window = XCreateSimpleWindow(display, RootWindow(display, 0), 0, 0, 400, 300, 0, 0, WhitePixel(display, 0));
+    XSelectInput(display, window, ExposureMask | KeyPressMask);
+    XMapWindow(display, window);
 
-   d = XOpenDisplay(NULL);
-   if (d == NULL) {
-      fprintf(stderr, "Cannot open display\n");
-      exit(1);
-   }
+    // Load a font with Xft
+    font = XftFontOpenName(display, DefaultScreen(display), "Noto Color Emoji:style=Regular");
 
-   s = DefaultScreen(d);
-   w = XCreateSimpleWindow(d, RootWindow(d, s), 10, 10, 100, 100, 1,
-                           BlackPixel(d, s), WhitePixel(d, s));
-   XSelectInput(d, w, ExposureMask | KeyPressMask);
-   XMapWindow(d, w);
+    // Create an Xft draw context
+    draw = XftDrawCreate(display, window, DefaultVisual(display, 0), DefaultColormap(display, 0));
 
-   while (1) {
-      XNextEvent(d, &e);
-      if (e.type == Expose) {
-         XFillRectangle(d, w, DefaultGC(d, s), 20, 20, 10, 10);
-         XDrawString(d, w, DefaultGC(d, s), 10, 50, msg, strlen(msg));
-      }
-      if (e.type == KeyPress)
-         break;
-   }
+    // Main event loop
+    XEvent event;
+    while (1) {
+        XNextEvent(display, &event);
+        if (event.type == Expose) {
+            // Draw the emoji
+            const char *emoji_text = "😀";  // Unicode representation of the emoji
+            XftTextExtentsUtf8(display, font, (XftChar8 *)emoji_text, strlen(emoji_text), &glyph_info);
+            XftDrawStringUtf8(draw, &font->color, font, 50, 150, (XftChar8 *)emoji_text, strlen(emoji_text));
+        }
+        if (event.type == KeyPress) {
+            break; // Exit on key press
+        }
+    }
 
-   XCloseDisplay(d);
-   return 0;
+    // Clean up
+    XftFontClose(display, font);
+    XftDrawDestroy(draw);
+    XDestroyWindow(display, window);
+    XCloseDisplay(display);
+
+    return 0;
 }
